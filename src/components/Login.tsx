@@ -26,8 +26,8 @@ export default function Login() {
   return (
     <main className="center">
       <form className="card login" onSubmit={submit}>
-        <h1>Trading Calendar</h1>
-        <p className="muted">Private — sign in to continue.</p>
+        <h1>Bill's Trading Journal</h1>
+        <p className="muted">Private - sign in to continue.</p>
         <label>
           Email
           <input type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
