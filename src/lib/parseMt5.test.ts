@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { parseMt5Rows } from './parseMt5'
-import { buildGrid, groupByDay, monthStats } from './calendar'
+import { accountSummary, buildGrid, groupByDay, monthStats, weekTotals } from './calendar'
 import type { StoredTrade } from './types'
 
 const position = (id: number, profit: number, close = '2026.02.16 08:44:35') =>
@@ -49,5 +49,22 @@ describe('calendar helpers', () => {
     const s = monthStats(days, 2026, 1)
     expect(s).toMatchObject({ total: 0, count: 3, tradingDays: 2, avgWin: 10, avgLoss: -5 })
     expect(s.winRate).toBeCloseTo(1 / 3)
+  })
+  it('totals each Monday–Sunday row, including adjacent-month days', () => {
+    const t = (id: number, day: string, net: number) => ({ position_id: id, close_day: day, net }) as StoredTrade
+    const days = groupByDay([t(1, '2026-01-30', 5), t(2, '2026-02-01', 2), t(3, '2026-02-02', -1), t(4, '2026-02-09', 7)])
+    const weeks = weekTotals(buildGrid(2026, 1).dates, days)
+    expect(weeks).toHaveLength(6)
+    expect(weeks[0]).toEqual({ net: 7, count: 2 }) // Jan 26 – Feb 1
+    expect(weeks[1]).toEqual({ net: -1, count: 1 })
+    expect(weeks[2]).toEqual({ net: 7, count: 1 })
+    expect(weeks[3]).toEqual({ net: 0, count: 0 })
+  })
+  it('builds the all-time total and cumulative series', () => {
+    const a = accountSummary([
+      { close_day: '2026-02-02', net: 10 }, { close_day: '2026-02-02', net: -4 },
+      { close_day: '2026-02-03', net: -8 },
+    ])
+    expect(a).toMatchObject({ total: -2, count: 3, since: '2026-02-02', series: [0, 6, -2] })
   })
 })

@@ -40,6 +40,8 @@ MT5 → **History** tab → right-click → **Report → Open XML (MS Office Exc
 * Only the **Positions** section is read (closed trades). Deposits/withdrawals are ignored.
 * A trade's result = profit + commission + swap, assigned to the day it **closed**.
 * Days follow the **broker server time** printed in the report (no timezone shifting), which is how MT5 itself groups days.
+* **Week** column = Monday–Sunday total for that row (full week, even when it spans two months), so it won't always add up to the month total.
+* **Account total P/L** = every imported trade, all time; the line beside it is the running total after each trading day.
 * Avg Daily = month total ÷ days that had trades. Avg Win / Avg Loss = per trade.
 
 ## Notes

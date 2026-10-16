@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { supabase } from '../lib/supabase'
+import { supabase, supabaseHost } from '../lib/supabase'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -13,7 +13,13 @@ export default function Login() {
     setBusy(true)
     setError(null)
     const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) setError(error.message)
+    if (error) {
+      setError(
+        /failed to fetch|networkerror|load failed/i.test(error.message)
+          ? `Can't reach ${supabaseHost}. Check that VITE_SUPABASE_URL is your project URL (https://xxxx.supabase.co), the project isn't paused, and no VPN/ad-blocker is blocking supabase.co.`
+          : error.message,
+      )
+    }
     setBusy(false)
   }
 
@@ -40,6 +46,7 @@ export default function Login() {
         <button className="btn primary" disabled={busy}>
           {busy ? 'Signing in…' : 'Sign in'}
         </button>
+        <p className="muted small-note">Server: {supabaseHost}</p>
       </form>
     </main>
   )

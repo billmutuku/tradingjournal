@@ -5,9 +5,10 @@ import DayDialog from './components/DayDialog'
 import ImportDialog from './components/ImportDialog'
 import Login from './components/Login'
 import StatCards from './components/StatCards'
-import { buildGrid, groupByDay, localToday, monthStats } from './lib/calendar'
+import AccountSummary from './components/AccountSummary'
+import { accountSummary, buildGrid, groupByDay, localToday, monthStats } from './lib/calendar'
 import { parseMt5File, type ParsedReport } from './lib/parseMt5'
-import { fetchLatestDay, fetchTrades, importTrades, supabase } from './lib/supabase'
+import { fetchAllNets, fetchLatestDay, fetchTrades, importTrades, supabase } from './lib/supabase'
 import type { StoredTrade } from './lib/types'
 
 export default function App() {
@@ -46,6 +47,7 @@ function Dashboard({ userId, email }: { userId: string; email: string }) {
   const now = new Date()
   const [{ year, month }, setMonth] = useState({ year: now.getFullYear(), month: now.getMonth() })
   const [trades, setTrades] = useState<StoredTrade[]>([])
+  const [allNets, setAllNets] = useState<{ close_day: string; net: number }[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selected, setSelected] = useState<string | null>(null)
@@ -78,6 +80,16 @@ function Dashboard({ userId, email }: { userId: string; email: string }) {
     return () => { cancelled = true }
   }, [year, month, reloadKey])
 
+  // All-time totals for the account summary (refreshed after every import).
+  useEffect(() => {
+    let cancelled = false
+    fetchAllNets()
+      .then((r) => { if (!cancelled) setAllNets(r) })
+      .catch((e) => { if (!cancelled) setError(e instanceof Error ? e.message : 'Could not load account totals.') })
+    return () => { cancelled = true }
+  }, [reloadKey])
+
+  const account = useMemo(() => accountSummary(allNets), [allNets])
   const days = useMemo(() => groupByDay(trades), [trades])
   const stats = useMemo(() => monthStats(days, year, month), [days, year, month])
 
@@ -134,6 +146,8 @@ function Dashboard({ userId, email }: { userId: string; email: string }) {
         </div>
       )}
       {error && <div className="banner bad" role="alert">{error}</div>}
+
+      <AccountSummary summary={account} />
 
       <Calendar
         year={year}

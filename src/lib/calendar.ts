@@ -50,6 +50,44 @@ export function groupByDay(trades: StoredTrade[]): Map<string, DayAgg> {
   return map
 }
 
+export interface WeekAgg {
+  net: number
+  count: number
+}
+
+/** Totals for each Monday–Sunday row of the grid (full week, including days from adjacent months). */
+export function weekTotals(dates: string[], days: Map<string, DayAgg>): WeekAgg[] {
+  return Array.from({ length: Math.floor(dates.length / 7) }, (_, w) => {
+    let net = 0, count = 0
+    for (const date of dates.slice(w * 7, w * 7 + 7)) {
+      const d = days.get(date)
+      if (d) { net += d.net; count += d.count }
+    }
+    return { net: cents(net), count }
+  })
+}
+
+export interface AccountSummary {
+  total: number
+  count: number
+  since: string | null
+  /** running total after each trading day, starting from 0 */
+  series: number[]
+}
+
+export function accountSummary(rows: { close_day: string; net: number }[]): AccountSummary {
+  const perDay = new Map<string, number>()
+  for (const r of rows) perDay.set(r.close_day, (perDay.get(r.close_day) ?? 0) + Number(r.net))
+  const series = [0]
+  let running = 0
+  for (const day of [...perDay.keys()].sort()) {
+    running = cents(running + (perDay.get(day) ?? 0))
+    series.push(running)
+  }
+  const first = rows.reduce<string | null>((m, r) => (m === null || r.close_day < m ? r.close_day : m), null)
+  return { total: running, count: rows.length, since: first, series }
+}
+
 export interface MonthStats {
   total: number
   count: number
