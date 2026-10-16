@@ -125,7 +125,7 @@ function Dashboard({ userId, email }: { userId: string; email: string }) {
   return (
     <div className="app">
       <header className="topbar">
-        <h1>Trading Calendar</h1>
+        <h1>Calendar</h1>
         <div className="topbar-actions">
           <input
             ref={fileInput}
