@@ -46,7 +46,6 @@ export default function Login() {
         <button className="btn primary" disabled={busy}>
           {busy ? 'Signing in…' : 'Sign in'}
         </button>
-        <p className="muted small-note">Server: {supabaseHost}</p>
       </form>
     </main>
   )
